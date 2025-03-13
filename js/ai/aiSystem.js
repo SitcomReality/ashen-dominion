@@ -409,4 +409,60 @@ export class AISystem {
             }
         };
     }
+
+    /**
+     * Update AI agents
+     * @param {number} deltaTime - Time since last update in seconds
+     */
+    update(deltaTime) {
+        // Update timer
+        this.updateTimer += deltaTime;
+        
+        // Only update AI at specified intervals to improve performance
+        if (this.updateTimer >= this.updateInterval) {
+            this.updateTimer = 0;
+            
+            // Get AI agents to update this frame
+            const agents = Array.from(this.agents.values());
+            const agentsToUpdate = agents.slice(0, this.agentsPerUpdate);
+            
+            // Update each agent
+            agentsToUpdate.forEach(agent => {
+                if (agent.brain && agent.brain.currentState) {
+                    // Execute current state behavior
+                    const state = this.behaviorStates[agent.brain.currentState];
+                    if (state && state.update) {
+                        const nextState = state.update(agent, deltaTime);
+                        
+                        // Transition to new state if needed
+                        if (nextState && nextState !== agent.brain.currentState) {
+                            this.transitionState(agent, nextState);
+                        }
+                    }
+                }
+            });
+        }
+    }
+    
+    /**
+     * Transition an agent to a new state
+     * @param {object} agent - The agent to transition
+     * @param {string} newState - The new state name
+     */
+    transitionState(agent, newState) {
+        // Exit current state
+        const currentState = this.behaviorStates[agent.brain.currentState];
+        if (currentState && currentState.exit) {
+            currentState.exit(agent);
+        }
+        
+        // Update state
+        agent.brain.currentState = newState;
+        
+        // Enter new state
+        const state = this.behaviorStates[newState];
+        if (state && state.enter) {
+            state.enter(agent);
+        }
+    }
 }
