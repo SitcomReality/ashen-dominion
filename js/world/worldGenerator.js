@@ -92,7 +92,18 @@ export class WorldGenerator {
         console.log(`Generating world with seed: ${seed}`);
         
         // Initialize random generator with seed
-        this.random = new window.seedrandom(seed);
+        this.random = function() {
+            return Math.random();
+        };
+        
+        try {
+            if (typeof window.seedrandom === 'function') {
+                const seededRandom = new window.seedrandom(seed);
+                this.random = seededRandom;
+            }
+        } catch (e) {
+            console.warn("Seedrandom not available, using Math.random instead", e);
+        }
         
         // Create world object
         const world = {
