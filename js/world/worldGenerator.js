@@ -421,5 +421,101 @@ export class WorldGenerator {
             x: villageX + 8,
             y: villageY + 3,
             width: 4,
-            height: 
-
+            height: 4
+        });
+        
+        // Add more buildings based on village size
+        const numHouses = 3 + Math.floor(Math.random() * 4);
+        for (let i = 0; i < numHouses; i++) {
+            const offsetX = -15 + Math.floor(Math.random() * 30);
+            const offsetY = -15 + Math.floor(Math.random() * 30);
+            
+            buildings.push({
+                type: 'house',
+                name: 'House',
+                x: villageX + offsetX,
+                y: villageY + offsetY,
+                width: 3,
+                height: 3
+            });
+        }
+        
+        return buildings;
+    }
+    
+    /**
+     * Generate a village name
+     * @returns {string} - Generated village name
+     */
+    generateVillageName() {
+        const prefixes = ['Green', 'Oak', 'Silver', 'Gold', 'Stone', 'Black', 'White', 'Red', 'Blue', 'North', 'South', 'East', 'West'];
+        const suffixes = ['field', 'wood', 'haven', 'vale', 'ford', 'bridge', 'ton', 'wick', 'shire', 'hall', 'mill', 'pond'];
+        
+        const prefix = prefixes[Math.floor(this.random() * prefixes.length)];
+        const suffix = suffixes[Math.floor(this.random() * suffixes.length)];
+        
+        return prefix + suffix;
+    }
+    
+    /**
+     * Generate dungeons for the world
+     * @param {object} world - World object
+     * @returns {Array} - Array of dungeons
+     */
+    generateDungeons(world) {
+        const dungeons = [];
+        const dungeonCount = this.worldParams.dungeonCount;
+        
+        // Implementation details would go here
+        
+        return dungeons;
+    }
+    
+    /**
+     * Generate points of interest
+     * @param {object} world - World object
+     * @returns {Array} - Array of points of interest
+     */
+    generatePointsOfInterest(world) {
+        const pois = [];
+        
+        // Implementation details would go here
+        
+        return pois;
+    }
+    
+    /**
+     * Generate roads connecting regions
+     * @param {object} world - World object
+     * @returns {Array} - Array of road segments
+     */
+    generateRoads(world) {
+        const roads = [];
+        
+        // Implementation details would go here
+        
+        return roads;
+    }
+    
+    /**
+     * Determine player starting location
+     * @param {object} world - World object
+     * @returns {object} - Player start position {x, y}
+     */
+    determinePlayerStart(world) {
+        // Default to center of first village if exists
+        if (world.villages.length > 0) {
+            const startVillage = world.villages[0];
+            return {
+                x: startVillage.x,
+                y: startVillage.y
+            };
+        }
+        
+        // Otherwise start in the middle
+        return {
+            x: Math.floor(world.width / 2),
+            y: Math.floor(world.height / 2)
+        };
+    }
+}
