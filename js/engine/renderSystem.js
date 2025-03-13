@@ -357,47 +357,51 @@ export class RenderSystem {
         // Get weather for sky effects
         const currentWeather = this.engine.weatherSystem?.getCurrentWeather() ?? 'clear';
         
-        // Render sky gradient
+        // Render cyberpunk sky gradient
         const skyGradient = ctx.createLinearGradient(0, 0, 0, this.canvas.height * 0.5);
         
         if (isDaytime) {
-            switch (currentWeather) {
-                case 'clear':
-                    skyGradient.addColorStop(0, '#87CEEB'); // Sky blue
-                    skyGradient.addColorStop(1, '#E0F7FF'); // Lighter blue
-                    break;
-                case 'cloudy':
-                    skyGradient.addColorStop(0, '#A5C9E0'); // Cloudy blue
-                    skyGradient.addColorStop(1, '#D6E9F5'); // Light gray-blue
-                    break;
-                case 'rain':
-                    skyGradient.addColorStop(0, '#708090'); // Slate gray
-                    skyGradient.addColorStop(1, '#A9B9C7'); // Lighter gray
-                    break;
-                case 'storm':
-                    skyGradient.addColorStop(0, '#4A4A4A'); // Dark gray
-                    skyGradient.addColorStop(1, '#7B7B7B'); // Medium gray
-                    break;
-                case 'snow':
-                    skyGradient.addColorStop(0, '#E6E6FA'); // Lavender
-                    skyGradient.addColorStop(1, '#FFFFFF'); // White
-                    break;
-                default:
-                    skyGradient.addColorStop(0, '#87CEEB');
-                    skyGradient.addColorStop(1, '#E0F7FF');
-            }
+            // Daytime cyberpunk sky
+            skyGradient.addColorStop(0, '#0a1721'); // Dark blue
+            skyGradient.addColorStop(0.5, '#193852'); // Mid blue
+            skyGradient.addColorStop(1, '#621c49'); // Purple tint
         } else {
-            // Night sky
+            // Night cyberpunk sky
             skyGradient.addColorStop(0, '#0C1445'); // Dark blue
-            skyGradient.addColorStop(1, '#243165'); // Medium blue
+            skyGradient.addColorStop(0.5, '#243165'); // Medium blue
+            skyGradient.addColorStop(1, '#5e1b35'); // Deep red
         }
         
         ctx.fillStyle = skyGradient;
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height * 0.5);
         this.metrics.drawCalls++;
         
-        // Render distant features (mountains, etc.)
-        // This would depend on the world generator
+        // Draw distant department store ceiling structures
+        this.renderDistantStructures(ctx);
+    }
+    
+    /**
+     * Render distant ceiling structures
+     * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+     */
+    renderDistantStructures(ctx) {
+        // Draw ceiling lights
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        for (let i = 0; i < 12; i++) {
+            const x = this.canvas.width * (i / 12);
+            const y = this.canvas.height * 0.2;
+            const width = 10;
+            const height = 40;
+            
+            ctx.fillRect(x - width/2, y - height/2, width, height);
+        }
+        
+        // Draw distant air ducts
+        ctx.fillStyle = '#344';
+        ctx.fillRect(this.canvas.width * 0.2, this.canvas.height * 0.1, 100, 20);
+        ctx.fillRect(this.canvas.width * 0.7, this.canvas.height * 0.15, 80, 15);
+        
+        this.metrics.drawCalls += 2;
     }
     
     /**
@@ -408,6 +412,10 @@ export class RenderSystem {
         // Get current region
         const currentRegion = this.engine.worldManager?.getCurrentRegion();
         if (!currentRegion) return;
+        
+        // Get world data
+        const worldData = this.engine.worldManager.worldData;
+        if (!worldData) return;
         
         // Calculate visible tiles range
         const screenToWorld = (x, y) => this.screenToWorldPosition(x, y);
@@ -426,6 +434,52 @@ export class RenderSystem {
             for (let x = minX; x <= maxX; x++) {
                 this.renderTerrainTile(ctx, x, y);
             }
+        }
+    }
+    
+    /**
+     * Get tile type based on world coordinates
+     * @param {number} x - World X coordinate
+     * @param {number} y - World Y coordinate
+     * @returns {string} - Tile type
+     */
+    getTileType(x, y) {
+        // Try to get biome data from world data
+        const worldData = this.engine.worldManager?.worldData;
+        if (!worldData || !worldData.regions) {
+            // Fallback to checkerboard if no world data
+            return (x + y) % 2 === 0 ? 'grass' : 'dirt';
+        }
+        
+        // Find the region containing this position
+        const region = worldData.regions.find(r => 
+            x >= r.x && x < (r.x + r.width) && 
+            y >= r.y && y < (r.y + r.height)
+        );
+        
+        if (!region) {
+            // Outside of any defined region
+            return 'stone';
+        }
+        
+        // Different tile types based on biome
+        switch (region.biome) {
+            case 'MallPlaza':
+                return 'grass';
+            case 'ElectronicsDept':
+                return (x + y) % 2 === 0 ? 'dirt' : 'stone';
+            case 'Storage':
+                return 'stone';
+            case 'FoodCourt':
+                return (x + y) % 3 === 0 ? 'grass' : 'dirt';
+            case 'Restricted':
+                return 'water';
+            case 'LuxuryDept':
+                return (x + y) % 2 === 0 ? 'grass' : 'sand';
+            case 'MaintenanceTunnels':
+                return 'stone';
+            default:
+                return (x + y) % 2 === 0 ? 'grass' : 'dirt';
         }
     }
     
@@ -482,24 +536,6 @@ export class RenderSystem {
         ctx.stroke();
         
         this.metrics.drawCalls++;
-    }
-    
-    /**
-     * Get tile type based on world coordinates
-     * @param {number} x - World X coordinate
-     * @param {number} y - World Y coordinate
-     * @returns {string} - Tile type
-     */
-    getTileType(x, y) {
-        // In a real implementation, this would use the world generator
-        // For now, just return some basic patterns
-        
-        // Basic checkerboard pattern
-        if ((x + y) % 2 === 0) {
-            return 'grass';
-        } else {
-            return 'dirt';
-        }
     }
     
     /**

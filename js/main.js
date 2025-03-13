@@ -150,21 +150,35 @@ class Game {
         });
     }
     
-    startNewGame() {
+    async startNewGame() {
         const characterName = document.getElementById('character-name').value.trim() || 'Traveler';
         const worldSeed = document.getElementById('world-seed').value.trim() || String(Math.floor(Math.random() * 1000000));
         
-        // Hide all screens and show game container
+        // Show a loading screen during world generation
+        this.loadingManager.showLoadingScreen();
+        this.loadingManager.updateProgress(10, 'Generating world...');
+        
+        // Initialize the game world with the seed
+        await this.engine.initWorld(worldSeed);
+        this.loadingManager.updateProgress(50, 'Creating player character...');
+        
+        // Create player character
+        this.engine.createPlayerCharacter(characterName);
+        this.loadingManager.updateProgress(80, 'Preparing environment...');
+        
+        // Additional preparation time
+        await new Promise(resolve => setTimeout(resolve, 500));
+        this.loadingManager.updateProgress(100, 'Ready!');
+        
+        // Short delay to show the completed loading bar
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Hide loading screen and show game container
+        this.loadingManager.hideLoadingScreen();
         document.querySelectorAll('.screen-container, #splash-screen, #new-game-screen').forEach(el => {
             el.classList.add('hidden');
         });
         document.getElementById('game-container').classList.remove('hidden');
-        
-        // Initialize the game world with the seed
-        this.engine.initWorld(worldSeed);
-        
-        // Create player character
-        this.engine.createPlayerCharacter(characterName);
         
         // Start the game loop
         this.engine.start();
@@ -205,4 +219,3 @@ class Game {
 document.addEventListener('DOMContentLoaded', () => {
     window.game = new Game();
 });
-

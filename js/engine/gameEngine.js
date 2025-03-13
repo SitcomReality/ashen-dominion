@@ -65,12 +65,29 @@ export class GameEngine {
     /**
      * Initialize the game world
      * @param {string} seed - Seed for world generation
+     * @returns {Promise} - Promise that resolves when initialization is complete
      */
-    initWorld(seed) {
+    async initWorld(seed) {
         this.worldSeed = seed;
+        
+        // Create world generator if not exists
+        if (!this.game.worldGenerator) {
+            this.game.worldGenerator = new WorldGenerator(this);
+        }
+        
+        // Generate the world
+        const generatedWorld = this.game.worldGenerator.generateWorld(seed);
+        this.worldManager.setWorldData(generatedWorld);
+        
+        // Initialize other systems with the seed
         this.worldManager.initialize(seed);
         this.timeManager.initialize();
         this.weatherSystem.initialize(seed);
+        
+        // Allow for async operations and UI updates
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        return true;
     }
     
     /**

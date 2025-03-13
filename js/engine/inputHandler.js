@@ -470,14 +470,17 @@ export class InputHandler {
     applyPlayerMovement() {
         if (!this.engine.player) return;
         
-        // In a real implementation, this would set the player's velocity
-        // or target position for the physics system to handle
+        // In our game, the player stays centered and the world moves
+        // We still track the intended velocity for animation purposes
         if (this.movementVector.x !== 0 || this.movementVector.y !== 0) {
-            // Request player movement
+            // Set player's velocity for animation, but don't move player position
             this.engine.player.velocity = {
                 x: this.movementVector.x * (this.engine.player.movementSpeed || 3),
                 y: this.movementVector.y * (this.engine.player.movementSpeed || 3)
             };
+            
+            // Map direction: player moves SE (positive x,y) -> map moves NW (negative x,y)
+            // The worldManager.update function will handle the map movement
         } else {
             // Stop player movement
             this.engine.player.velocity = { x: 0, y: 0 };

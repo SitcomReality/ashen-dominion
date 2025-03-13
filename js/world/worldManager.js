@@ -13,12 +13,24 @@ export class WorldManager {
     }
     
     /**
+     * Set the world data from the generator
+     * @param {object} worldData - The generated world data
+     */
+    setWorldData(worldData) {
+        this.worldData = worldData;
+        console.log('World data loaded:', worldData);
+    }
+    
+    /**
      * Initialize the world with a given seed
      * @param {string} seed - Seed for world generation
      */
     initialize(seed) {
-        // Generate the world using WorldGenerator
-        this.worldData = this.engine.game.worldGenerator.generateWorld(seed);
+        // If we don't have world data yet, generate it
+        if (!this.worldData) {
+            this.worldData = this.engine.game.worldGenerator.generateWorld(seed);
+        }
+        
         console.log(`World initialized with seed: ${seed}`);
         
         // Set initial player position
