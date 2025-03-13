@@ -384,13 +384,14 @@ export class WorldManager {
     update(deltaTime) {
         if (!this.engine.player || !this.worldData) return;
         
-        // Check if player has moved to a new region
-        const playerPos = this.engine.player.position;
-        const regionId = this.getRegionIdForPosition(playerPos.x, playerPos.y);
-        
-        if (regionId && regionId !== this.currentRegion?.id) {
-            // Player has entered a new region
-            this.activateRegion(regionId);
+        // Use player velocity to move the world in the opposite direction
+        const player = this.engine.player;
+        if (player.velocity && (player.velocity.x !== 0 || player.velocity.y !== 0)) {
+            // When the player moves, actually move the camera/world position
+            if (this.engine.renderSystem) {
+                this.engine.renderSystem.camera.x -= player.velocity.x * deltaTime;
+                this.engine.renderSystem.camera.y -= player.velocity.y * deltaTime;
+            }
         }
         
         // Update time-of-day based world effects

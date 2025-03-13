@@ -177,17 +177,22 @@ export class GameEngine {
             this.aiSystem.update(cappedDelta);
         }
         
-        // Update physics
-        this.physicsSystem.update(cappedDelta);
-        
         // Update entities
         this.entityManager.update(cappedDelta);
+        
+        // Update physics
+        this.physicsSystem.update(cappedDelta);
         
         // Update quests
         this.questSystem.update(cappedDelta);
         
         // Update story
         this.storyManager.update(cappedDelta);
+        
+        // Update world manager
+        if (this.worldManager) {
+            this.worldManager.update(cappedDelta);
+        }
     }
     
     /**

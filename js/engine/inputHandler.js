@@ -475,8 +475,8 @@ export class InputHandler {
         if (this.movementVector.x !== 0 || this.movementVector.y !== 0) {
             // Request player movement
             this.engine.player.velocity = {
-                x: this.movementVector.x * this.engine.player.movementSpeed,
-                y: this.movementVector.y * this.engine.player.movementSpeed
+                x: this.movementVector.x * (this.engine.player.movementSpeed || 3),
+                y: this.movementVector.y * (this.engine.player.movementSpeed || 3)
             };
         } else {
             // Stop player movement

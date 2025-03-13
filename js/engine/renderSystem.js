@@ -142,11 +142,16 @@ export class RenderSystem {
     }
     
     /**
-     * Focus camera on an entity
+     * Follow entity with camera
      * @param {object} entity - Entity to focus on
      */
     followEntity(entity) {
         if (!entity || !entity.position) return;
+        
+        // For player, don't move the camera - player stays centered
+        if (entity === this.engine.player) {
+            return;
+        }
         
         // Smoothly move camera towards entity
         const smoothFactor = 0.1;
