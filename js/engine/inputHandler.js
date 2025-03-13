@@ -78,6 +78,11 @@ export class InputHandler {
         // Store key state
         this.keys[event.key.toLowerCase()] = true;
         
+        // Prevent default for movement keys to avoid scrolling
+        if (['w', 'a', 's', 'd', ' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(event.key.toLowerCase())) {
+            event.preventDefault();
+        }
+        
         // Check for special key combinations
         if (event.key === 'F12') {
             // Toggle dev tools
@@ -96,6 +101,11 @@ export class InputHandler {
         if (!event || !event.key) return;
         
         this.keys[event.key.toLowerCase()] = false;
+        
+        // Prevent default for movement keys
+        if (['w', 'a', 's', 'd', ' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(event.key.toLowerCase())) {
+            event.preventDefault();
+        }
     }
     
     /**

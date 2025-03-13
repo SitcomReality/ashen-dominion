@@ -172,8 +172,10 @@ export class GameEngine {
         // Update weather
         this.weatherSystem.update(cappedDelta);
         
-        // Update AI
-        this.aiSystem.update(cappedDelta);
+        // Update AI if available
+        if (typeof this.aiSystem.update === 'function') {
+            this.aiSystem.update(cappedDelta);
+        }
         
         // Update physics
         this.physicsSystem.update(cappedDelta);
