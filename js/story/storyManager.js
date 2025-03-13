@@ -69,28 +69,28 @@ export class StoryManager {
         this.storyArcs = [
             {
                 id: 'main_arc',
-                name: 'Main Story',
-                description: 'The primary storyline of the game',
+                name: 'The Endless Aisles',
+                description: 'Discover the truth about Requiemporium and what lies beyond its walls',
                 chapters: 5,
                 currentChapter: 1,
                 progress: 0,
                 threads: [
-                    'mysterious_artifact',
-                    'village_troubles',
-                    'ancient_threat'
+                    'secret_beyond_walls',
+                    'corporate_conspiracy',
+                    'customer_rebellion'
                 ]
             },
             {
                 id: 'faction_war',
-                name: 'Faction Conflict',
-                description: 'A conflict between regional powers',
+                name: 'Retail Politics',
+                description: 'A power struggle between Requiemporium factions',
                 chapters: 3,
                 currentChapter: 0, // Not active yet
                 progress: 0,
                 threads: [
-                    'bandits_rising',
-                    'merchant_guild',
-                    'royal_guards'
+                    'security_control',
+                    'consumer_rights',
+                    'employee_uprising'
                 ]
             }
         ];
@@ -109,60 +109,60 @@ export class StoryManager {
         // Create plot threads for main arc
         this.plotThreads = [
             {
-                id: 'mysterious_artifact',
-                name: 'The Mysterious Artifact',
-                description: 'An ancient artifact with unknown powers',
+                id: 'secret_beyond_walls',
+                name: 'The World Beyond',
+                description: 'Rumors of an outside world beyond the store walls',
                 progress: 0,
                 state: 'active',
                 requiredFlags: [],
                 triggers: [
-                    { flag: 'discovered_artifact', value: true, chapter: 2 }
+                    { flag: 'found_restricted_door', value: true, chapter: 2 }
                 ]
             },
             {
-                id: 'village_troubles',
-                name: 'Village in Need',
-                description: 'The local village facing mysterious problems',
+                id: 'corporate_conspiracy',
+                name: 'Corporate Secrets',
+                description: 'The dark truth behind MallCorp and Requiemporium',
                 progress: 0,
                 state: 'active',
                 requiredFlags: [],
                 triggers: [
-                    { flag: 'helped_village', value: true, chapter: 1 }
+                    { flag: 'met_whistleblower', value: true, chapter: 1 }
                 ]
             },
             {
-                id: 'ancient_threat',
-                name: 'The Ancient Threat',
-                description: 'A dormant evil stirs once more',
+                id: 'customer_rebellion',
+                name: 'Consumer Revolt',
+                description: 'A growing movement against store policies',
                 progress: 0,
                 state: 'inactive', // Starts inactive
                 requiredFlags: [
-                    { flag: 'discovered_artifact', value: true }
+                    { flag: 'found_restricted_door', value: true }
                 ],
                 triggers: [
-                    { flag: 'confronted_ancient_evil', value: true, chapter: 4 }
+                    { flag: 'joined_rebellion', value: true, chapter: 3 }
                 ]
             },
             // Faction war threads
             {
-                id: 'bandits_rising',
-                name: 'Bandits Rising',
-                description: 'Bandits gaining power in the region',
+                id: 'security_control',
+                name: 'Security Lockdown',
+                description: 'Security forces tightening their grip on the store',
                 progress: 0,
                 state: 'inactive',
                 requiredFlags: [
-                    { flag: 'helped_village', value: true }
+                    { flag: 'met_whistleblower', value: true }
                 ],
                 triggers: []
             },
             {
-                id: 'merchant_guild',
-                name: 'Merchant Guild Secrets',
-                description: 'The merchant guild is hiding something',
+                id: 'consumer_rights',
+                name: 'Shoppers Rights',
+                description: 'The Shoppers Union demands better treatment',
                 progress: 0,
                 state: 'inactive',
                 requiredFlags: [
-                    { flag: 'met_merchant_leader', value: true }
+                    { flag: 'attended_meeting', value: true }
                 ],
                 triggers: []
             }

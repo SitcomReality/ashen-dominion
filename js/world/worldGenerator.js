@@ -13,74 +13,87 @@ export class WorldGenerator {
             regionSize: 100,       // Size of each region
             biomeSmoothness: 0.5,  // How smooth biome transitions are (0-1)
             mountaininess: 0.4,    // How mountainous the terrain is (0-1)
-            waterCoverage: 0.3,    // Percentage of world covered by water (0-1)
-            forestCoverage: 0.3,   // Percentage of land covered by forest (0-1)
-            villageCount: 5,       // Number of villages to generate
-            dungeonCount: 3,       // Number of dungeons to generate
-            pointsOfInterest: 10   // Number of misc points of interest
+            waterCoverage: 0.1,    // Percentage of world covered by water (0-1)
+            forestCoverage: 0.1,   // Percentage of land covered by forest (0-1)
+            villageCount: 7,       // Number of villages to generate
+            dungeonCount: 5,       // Number of dungeons to generate
+            pointsOfInterest: 15   // Number of misc points of interest
         };
         
         // Biomes and their properties
         this.biomes = [
             {
-                name: 'Plains',
+                name: 'MallPlaza',
                 color: '#A8D87E',
                 walkSpeed: 1.0,
                 vegetation: 0.3,
-                resources: ['wheat', 'berry_bush', 'herbs'],
+                resources: ['electronics', 'clothing', 'food_samples'],
                 spawnChance: {
-                    deer: 0.3,
-                    rabbit: 0.5,
-                    wolf: 0.1
+                    shopper: 0.5,
+                    security: 0.2,
+                    janitor: 0.3
                 }
             },
             {
-                name: 'Forest',
+                name: 'Residential',
                 color: '#4B8A37',
                 walkSpeed: 0.8,
-                vegetation: 0.8,
-                resources: ['wood', 'mushrooms', 'herbs'],
+                vegetation: 0.5,
+                resources: ['furniture', 'decorations', 'appliances'],
                 spawnChance: {
-                    bear: 0.2,
-                    wolf: 0.3,
-                    deer: 0.4,
-                    fox: 0.3
+                    resident: 0.6,
+                    maintenance: 0.2,
+                    visitor: 0.2
                 }
             },
             {
-                name: 'Mountain',
+                name: 'Storage',
                 color: '#8A8A8A',
                 walkSpeed: 0.6,
-                vegetation: 0.2,
-                resources: ['stone', 'iron_ore', 'coal'],
+                vegetation: 0.0,
+                resources: ['boxes', 'metal_parts', 'plastic'],
                 spawnChance: {
-                    goat: 0.3,
-                    eagle: 0.2
+                    worker: 0.4,
+                    robot: 0.3
                 }
             },
             {
-                name: 'Desert',
+                name: 'FoodCourt',
                 color: '#E1BE7D',
                 walkSpeed: 0.7,
-                vegetation: 0.1,
-                resources: ['cactus_fruit', 'sand', 'clay'],
+                vegetation: 0.2,
+                resources: ['food', 'utensils', 'cleaning_supplies'],
                 spawnChance: {
-                    scorpion: 0.3,
-                    snake: 0.2
+                    chef: 0.3,
+                    customer: 0.5
                 }
             },
             {
-                name: 'Water',
+                name: 'Restricted',
                 color: '#4A99D5',
                 walkSpeed: 0.3,
-                vegetation: 0.2,
-                resources: ['fish', 'water_lily', 'reed'],
+                vegetation: 0.0,
+                resources: ['tech_parts', 'security_cards', 'documents'],
                 spawnChance: {
-                    fish: 0.7,
-                    duck: 0.3
+                    executive: 0.1,
+                    security: 0.7
                 }
             }
         ];
+        
+        // Faction system
+        this.factions = [
+            { id: 'mallcorp', name: 'MallCorp', color: '#3498db' },
+            { id: 'shoppers_union', name: 'Shoppers Union', color: '#e74c3c' },
+            { id: 'security_force', name: 'Security Force', color: '#34495e' },
+            { id: 'free_samplers', name: 'Free Samplers', color: '#f1c40f' },
+            { id: 'tech_rebels', name: 'Tech Rebels', color: '#9b59b6' },
+            { id: 'maintenance_crew', name: 'Maintenance Crew', color: '#2ecc71' },
+            { id: 'luxury_elite', name: 'Luxury Elite', color: '#e67e22' }
+        ];
+        
+        // Relationship matrix will be generated randomly
+        this.factionRelationships = null;
     }
     
     /**
@@ -89,7 +102,7 @@ export class WorldGenerator {
      * @returns {object} - Generated world
      */
     generateWorld(seed) {
-        console.log(`Generating world with seed: ${seed}`);
+        console.log(`Generating Requiemporium with seed: ${seed}`);
         
         // Initialize random generator with seed
         this.random = function() {
@@ -105,6 +118,9 @@ export class WorldGenerator {
             console.warn("Seedrandom not available, using Math.random instead", e);
         }
         
+        // Generate faction relationships
+        this.generateFactionRelationships();
+        
         // Create world object
         const world = {
             seed: seed,
@@ -113,7 +129,9 @@ export class WorldGenerator {
             regions: [],
             villages: [],
             dungeons: [],
-            pointsOfInterest: []
+            pointsOfInterest: [],
+            factions: this.factions,
+            factionRelationships: this.factionRelationships
         };
         
         // Generate heightmap and moisture map
@@ -360,7 +378,7 @@ export class WorldGenerator {
         
         // Find suitable regions for villages (Plains or Forest, not water or mountains)
         const suitableRegions = world.regions.filter(region => 
-            region.biome === 'Plains' || region.biome === 'Forest'
+            region.biome === 'MallPlaza' || region.biome === 'Residential'
         );
         
         // If no suitable regions, return empty array
@@ -457,13 +475,13 @@ export class WorldGenerator {
      * @returns {string} - Generated village name
      */
     generateVillageName() {
-        const prefixes = ['Green', 'Oak', 'Silver', 'Gold', 'Stone', 'Black', 'White', 'Red', 'Blue', 'North', 'South', 'East', 'West'];
-        const suffixes = ['field', 'wood', 'haven', 'vale', 'ford', 'bridge', 'ton', 'wick', 'shire', 'hall', 'mill', 'pond'];
+        const prefixes = ['Neo', 'Cyber', 'Neon', 'Digi', 'Synth', 'Tech', 'Circuit', 'Pixel', 'Data', 'Virtual'];
+        const suffixes = ['Market', 'Plaza', 'Sector', 'Floor', 'Wing', 'Section', 'Boutique', 'Outlet', 'Zone', 'Court'];
         
         const prefix = prefixes[Math.floor(this.random() * prefixes.length)];
         const suffix = suffixes[Math.floor(this.random() * suffixes.length)];
         
-        return prefix + suffix;
+        return prefix + ' ' + suffix;
     }
     
     /**
@@ -526,5 +544,95 @@ export class WorldGenerator {
             x: Math.floor(world.width / 2),
             y: Math.floor(world.height / 2)
         };
+    }
+    
+    /**
+     * Generate faction relationships
+     */
+    generateFactionRelationships() {
+        // Initialize relationship matrix
+        this.factionRelationships = {};
+        
+        // For each pair of factions, assign a relationship value
+        for (let i = 0; i < this.factions.length; i++) {
+            const faction1 = this.factions[i].id;
+            this.factionRelationships[faction1] = {};
+            
+            for (let j = 0; j < this.factions.length; j++) {
+                const faction2 = this.factions[j].id;
+                
+                // Self-relationship is always 100 (allied)
+                if (i === j) {
+                    this.factionRelationships[faction1][faction2] = 100;
+                    continue;
+                }
+                
+                // If relationship is already defined, use it
+                if (j < i && this.factionRelationships[faction2] && this.factionRelationships[faction2][faction1] !== undefined) {
+                    this.factionRelationships[faction1][faction2] = this.factionRelationships[faction2][faction1];
+                    continue;
+                }
+                
+                // Generate random relationship value
+                // -100 to -30 = hostile, -29 to 29 = neutral, 30 to 100 = allied
+                let value;
+                const roll = this.random();
+                
+                if (roll < 0.33) {
+                    // Hostile: -100 to -30
+                    value = -100 + Math.floor(this.random() * 70);
+                } else if (roll < 0.67) {
+                    // Neutral: -29 to 29
+                    value = -29 + Math.floor(this.random() * 59);
+                } else {
+                    // Allied: 30 to 100
+                    value = 30 + Math.floor(this.random() * 70);
+                }
+                
+                this.factionRelationships[faction1][faction2] = value;
+            }
+        }
+        
+        // Make sure we have at least one pair of hostile factions
+        let hasHostile = false;
+        for (const faction1 in this.factionRelationships) {
+            for (const faction2 in this.factionRelationships[faction1]) {
+                if (faction1 !== faction2 && this.factionRelationships[faction1][faction2] <= -30) {
+                    hasHostile = true;
+                    break;
+                }
+            }
+            if (hasHostile) break;
+        }
+        
+        // If no hostile relationships, create one
+        if (!hasHostile) {
+            const faction1 = this.factions[0].id;
+            const faction2 = this.factions[1].id;
+            const value = -100 + Math.floor(this.random() * 70);
+            this.factionRelationships[faction1][faction2] = value;
+            this.factionRelationships[faction2][faction1] = value;
+        }
+        
+        // Make sure we have at least one pair of allied factions
+        let hasAllied = false;
+        for (const faction1 in this.factionRelationships) {
+            for (const faction2 in this.factionRelationships[faction1]) {
+                if (faction1 !== faction2 && this.factionRelationships[faction1][faction2] >= 30) {
+                    hasAllied = true;
+                    break;
+                }
+            }
+            if (hasAllied) break;
+        }
+        
+        // If no allied relationships, create one
+        if (!hasAllied) {
+            const faction1 = this.factions[2].id;
+            const faction2 = this.factions[3].id;
+            const value = 30 + Math.floor(this.random() * 70);
+            this.factionRelationships[faction1][faction2] = value;
+            this.factionRelationships[faction2][faction1] = value;
+        }
     }
 }

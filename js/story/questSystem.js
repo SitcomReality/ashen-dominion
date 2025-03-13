@@ -13,6 +13,8 @@ export class QuestSystem {
         
         // Current quest notifications
         this.questNotifications = [];
+        
+        this.initializeItemTemplates();
     }
     
     /**
@@ -653,5 +655,74 @@ export class QuestSystem {
         }
         
         return null;
+    }
+    
+    initializeItemTemplates() {
+        // Weapons
+        this.registerItemTemplate({
+            id: 'shock_baton',
+            name: 'Shock Baton',
+            description: 'A security-grade non-lethal weapon.',
+            type: 'equipment',
+            subtype: 'sword',
+            icon: 'sword',
+            equipSlot: 'weapon',
+            value: 10,
+            stackable: false,
+            stats: {
+                attack: 3
+            }
+        });
+        
+        this.registerItemTemplate({
+            id: 'laser_cutter',
+            name: 'Laser Cutter',
+            description: 'A maintenance tool repurposed as a weapon.',
+            type: 'equipment',
+            subtype: 'sword',
+            icon: 'sword',
+            equipSlot: 'weapon',
+            value: 50,
+            stackable: false,
+            stats: {
+                attack: 7
+            }
+        });
+        
+        // Armor
+        this.registerItemTemplate({
+            id: 'synth_jacket',
+            name: 'Synthetic Jacket',
+            description: 'A jacket made from synthetic materials.',
+            type: 'equipment',
+            subtype: 'armor',
+            icon: 'armor',
+            equipSlot: 'torso',
+            value: 30,
+            stackable: false,
+            stats: {
+                defense: 5
+            }
+        });
+        
+        this.registerItemTemplate({
+            id: 'security_helmet',
+            name: 'Security Helmet',
+            description: 'Standard issue mall security helmet.',
+            type: 'equipment',
+            subtype: 'helmet',
+            icon: 'helmet',
+            equipSlot: 'head',
+            value: 40,
+            stackable: false,
+            stats: {
+                defense: 6
+            }
+        });
+    }
+    
+    registerItemTemplate(itemTemplate) {
+        // implement registerItemTemplate function
+        console.log(`Registering item template: ${itemTemplate.name}`);
     }
 }
