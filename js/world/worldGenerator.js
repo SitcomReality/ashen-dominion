@@ -94,7 +94,7 @@ export class WorldGenerator {
         console.log(`Generating world with seed: ${seed}`);
         
         // Initialize random generator with seed
-        this.random = seedrandom(seed);
+        this.random = new Math.seedrandom(seed);
         
         // Create world object
         const world = {
