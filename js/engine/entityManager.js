@@ -211,6 +211,15 @@ export class EntityManager {
             'position.y': 0
         });
         
+        // Initialize inventory and equipment if they don't exist
+        if (!player.inventory) {
+            player.inventory = this.createInventory(30);
+        }
+        
+        if (!player.equipment) {
+            player.equipment = this.createEquipment();
+        }
+        
         // Add starting items
         this.addItemToEntity(player, 'wooden_sword', 1);
         this.addItemToEntity(player, 'health_potion', 3);
@@ -478,6 +487,31 @@ export class EntityManager {
     }
     
     /**
+     * Create inventory
+     * @param {number} size - Inventory size
+     */
+    createInventory(size) {
+        return {
+            size: size,
+            items: new Array(size)
+        }
+    }
+    
+    /**
+     * Create equipment
+     */
+    createEquipment() {
+        return {
+            head: null,
+            torso: null,
+            legs: null,
+            feet: null,
+            weapon: null,
+            accessory: null
+        }
+    }
+    
+    /**
      * Deep copy an object
      * @param {object} obj - Object to copy
      * @returns {object} - Deep copy of object
@@ -521,4 +555,3 @@ export class EntityManager {
         return (item && typeof item === 'object' && !Array.isArray(item));
     }
 }
-
