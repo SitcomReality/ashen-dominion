@@ -220,10 +220,18 @@ export class EntityManager {
             player.equipment = this.createEquipment();
         }
         
-        // Add starting items - check if itemTemplates exist first
-        if (this.engine.inventorySystem && this.engine.inventorySystem.getItemTemplate('wooden_sword')) {
-            this.addItemToEntity(player, 'wooden_sword', 1);
-            this.addItemToEntity(player, 'health_potion', 3);
+        // Add starting items - check if inventorySystem exists first
+        if (this.engine.inventorySystem) {
+            const woodenSword = this.engine.inventorySystem.getItemTemplate('wooden_sword');
+            const healthPotion = this.engine.inventorySystem.getItemTemplate('health_potion');
+            
+            if (woodenSword) {
+                this.addItemToEntity(player, 'wooden_sword', 1);
+            }
+            
+            if (healthPotion) {
+                this.addItemToEntity(player, 'health_potion', 3);
+            }
         }
         
         return player;
