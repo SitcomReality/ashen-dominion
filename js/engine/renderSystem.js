@@ -148,12 +148,15 @@ export class RenderSystem {
     followEntity(entity) {
         if (!entity || !entity.position) return;
         
-        // For player, don't move the camera - player stays centered
+        // For player, center the view on player
         if (entity === this.engine.player) {
+            // Ensure camera stays centered on player
+            this.camera.x = entity.position.x;
+            this.camera.y = entity.position.y;
             return;
         }
         
-        // Smoothly move camera towards entity
+        // Smoothly move camera towards other entities
         const smoothFactor = 0.1;
         this.camera.x += (entity.position.x - this.camera.x) * smoothFactor;
         this.camera.y += (entity.position.y - this.camera.y) * smoothFactor;

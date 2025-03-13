@@ -387,10 +387,16 @@ export class WorldManager {
         // Use player velocity to move the world in the opposite direction
         const player = this.engine.player;
         if (player.velocity && (player.velocity.x !== 0 || player.velocity.y !== 0)) {
-            // When the player moves, actually move the camera/world position
+            // Calculate isometric movement direction
+            // For isometric view, when player moves in one direction,
+            // the world should move in the opposite direction
+            const worldVelocityX = -player.velocity.x;
+            const worldVelocityY = -player.velocity.y;
+            
+            // When the player moves, move the camera/world position
             if (this.engine.renderSystem) {
-                this.engine.renderSystem.camera.x -= player.velocity.x * deltaTime;
-                this.engine.renderSystem.camera.y -= player.velocity.y * deltaTime;
+                this.engine.renderSystem.camera.x += worldVelocityX * deltaTime;
+                this.engine.renderSystem.camera.y += worldVelocityY * deltaTime;
             }
         }
         

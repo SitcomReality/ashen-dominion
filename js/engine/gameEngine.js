@@ -81,6 +81,11 @@ export class GameEngine {
         // Create player entity
         this.player = this.entityManager.createPlayer(name);
         
+        // Position player in the center of the view
+        if (this.renderSystem) {
+            this.renderSystem.followEntity(this.player);
+        }
+        
         // Initialize story with player
         this.storyManager.initialize(this.player);
         
