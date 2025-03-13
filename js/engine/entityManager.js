@@ -211,16 +211,11 @@ export class EntityManager {
             'position.y': 0
         });
         
-        // Initialize inventory and equipment if they don't exist
-        if (!player.inventory) {
-            player.inventory = this.engine.inventorySystem.createInventory(30);
-        }
+        // Initialize inventory and equipment directly
+        player.inventory = this.createInventory(30);
+        player.equipment = this.createEquipment();
         
-        if (!player.equipment) {
-            player.equipment = this.engine.inventorySystem.createEquipment();
-        }
-        
-        // Add starting items - check if inventorySystem exists first
+        // Add starting items if inventorySystem exists
         if (this.engine.inventorySystem) {
             const woodenSword = this.engine.inventorySystem.getItemTemplate('wooden_sword');
             const healthPotion = this.engine.inventorySystem.getItemTemplate('health_potion');
