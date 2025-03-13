@@ -28,6 +28,7 @@ export class GameEngine {
 
         // Engine systems
         this.entityManager = new EntityManager(this);
+        this.inventorySystem = new InventorySystem(this);
         this.worldManager = new WorldManager(this);
         this.storyManager = new StoryManager(this);
         this.timeManager = new TimeManager(this);
@@ -37,7 +38,6 @@ export class GameEngine {
         this.renderSystem = new RenderSystem(this);
         this.soundManager = new SoundManager(this);
         this.aiSystem = new AISystem(this);
-        this.inventorySystem = new InventorySystem(this);
         this.questSystem = new QuestSystem(this);
         this.saveSystem = new SaveSystem(this);
         
@@ -773,4 +773,3 @@ export class GameEngine {
         return { success: true };
     }
 }
-

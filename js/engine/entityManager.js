@@ -7,6 +7,9 @@ export class EntityManager {
         this.entities = new Map();
         this.entityTemplates = new Map();
         this.nextEntityId = 1;
+        
+        // Initialize entity templates immediately
+        this.loadEntityTemplates();
     }
     
     /**
@@ -14,7 +17,7 @@ export class EntityManager {
      */
     initialize() {
         // Load entity templates
-        this.loadEntityTemplates();
+        // this.loadEntityTemplates(); // Removed as it's now called in the constructor
     }
     
     /**
