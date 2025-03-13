@@ -213,11 +213,11 @@ export class EntityManager {
         
         // Initialize inventory and equipment if they don't exist
         if (!player.inventory) {
-            player.inventory = this.createInventory(30);
+            player.inventory = this.engine.inventorySystem.createInventory(30);
         }
         
         if (!player.equipment) {
-            player.equipment = this.createEquipment();
+            player.equipment = this.engine.inventorySystem.createEquipment();
         }
         
         // Add starting items - check if inventorySystem exists first
