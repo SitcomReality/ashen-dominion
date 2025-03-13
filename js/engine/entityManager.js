@@ -211,22 +211,26 @@ export class EntityManager {
             'position.y': 0
         });
         
-        // Initialize inventory and equipment directly
-        player.inventory = this.createInventory(30);
-        player.equipment = this.createEquipment();
-        
-        // Add starting items if inventorySystem exists
+        // Initialize inventory and equipment using inventory system
         if (this.engine.inventorySystem) {
+            player.inventory = this.engine.inventorySystem.createInventory(30);
+            player.equipment = this.engine.inventorySystem.createEquipment();
+            
+            // Add starting items
             const woodenSword = this.engine.inventorySystem.getItemTemplate('wooden_sword');
             const healthPotion = this.engine.inventorySystem.getItemTemplate('health_potion');
             
             if (woodenSword) {
-                this.addItemToEntity(player, 'wooden_sword', 1);
+                this.engine.inventorySystem.addItemToInventory(player.inventory, 'wooden_sword', 1);
             }
             
             if (healthPotion) {
-                this.addItemToEntity(player, 'health_potion', 3);
+                this.engine.inventorySystem.addItemToInventory(player.inventory, 'health_potion', 3);
             }
+        } else {
+            // Fallback if inventory system is not available
+            player.inventory = this.createInventory(30);
+            player.equipment = this.createEquipment();
         }
         
         return player;
