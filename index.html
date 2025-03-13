@@ -1,0 +1,273 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Isometric Sandbox</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.module.js",
+            "seedrandom": "https://cdn.jsdelivr.net/npm/seedrandom@3.0.5/seedrandom.min.js"
+        }
+    }
+    </script>
+</head>
+<body>
+    <div id="loading-screen" class="active">
+        <div class="logo-container">
+            <svg id="game-logo" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="50,20 150,20 180,50 150,80 50,80 20,50" fill="none" stroke="#f0f0f0" stroke-width="2"/>
+                <text x="55" y="55" font-family="Arial" font-size="14" fill="#f0f0f0">ISOMETRIC WORLD</text>
+            </svg>
+        </div>
+        <div class="loading-bar">
+            <div class="loading-progress"></div>
+        </div>
+    </div>
+
+    <div id="splash-screen" class="hidden">
+        <div class="splash-container">
+            <h1>Isometric World</h1>
+            <div class="menu-buttons">
+                <button id="new-game-btn" class="menu-btn">New Game</button>
+                <button id="load-game-btn" class="menu-btn">Load Game</button>
+                <button id="options-btn" class="menu-btn">Options</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="new-game-screen" class="hidden">
+        <div class="screen-container">
+            <h2>Create Character</h2>
+            <div class="character-creation">
+                <div class="character-preview">
+                    <div id="character-model"></div>
+                </div>
+                <div class="character-options">
+                    <div class="option-group">
+                        <label>Name:</label>
+                        <input type="text" id="character-name" placeholder="Enter name...">
+                    </div>
+                    <div class="option-group">
+                        <label>Seed:</label>
+                        <input type="text" id="world-seed" placeholder="Random seed">
+                        <button id="random-seed-btn">Random</button>
+                    </div>
+                    <div class="option-group">
+                        <label>Appearance:</label>
+                        <div class="appearance-controls">
+                            <!-- Appearance controls will be generated dynamically -->
+                        </div>
+                    </div>
+                    <div class="option-group">
+                        <label>Starting Stats:</label>
+                        <div class="stats-allocation">
+                            <!-- Stat allocation controls will be generated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="creation-actions">
+                <button id="back-to-menu-btn" class="menu-btn">Back</button>
+                <button id="start-game-btn" class="menu-btn primary">Start Game</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="load-game-screen" class="hidden">
+        <div class="screen-container">
+            <h2>Load Game</h2>
+            <div class="saved-games-list">
+                <!-- Saved games will be populated here -->
+            </div>
+            <div class="load-actions">
+                <button id="back-from-load-btn" class="menu-btn">Back</button>
+                <button id="load-selected-btn" class="menu-btn primary">Load Selected</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="options-screen" class="hidden">
+        <div class="screen-container">
+            <h2>Options</h2>
+            <div class="options-controls">
+                <div class="option-slider">
+                    <label>Music Volume:</label>
+                    <input type="range" id="music-volume" min="0" max="100" value="70">
+                    <span class="slider-value">70%</span>
+                </div>
+                <div class="option-slider">
+                    <label>Sound Effects:</label>
+                    <input type="range" id="sfx-volume" min="0" max="100" value="80">
+                    <span class="slider-value">80%</span>
+                </div>
+                <div class="option-toggle">
+                    <label>Show FPS:</label>
+                    <input type="checkbox" id="show-fps">
+                </div>
+                <div class="option-toggle">
+                    <label>Enable Weather Effects:</label>
+                    <input type="checkbox" id="enable-weather" checked>
+                </div>
+            </div>
+            <div class="options-actions">
+                <button id="back-from-options-btn" class="menu-btn">Back</button>
+                <button id="save-options-btn" class="menu-btn primary">Save Options</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-container" class="hidden">
+        <canvas id="game-canvas"></canvas>
+        
+        <div id="ui-container">
+            <!-- Game HUD elements -->
+            <div id="player-stats" class="ui-panel">
+                <div class="health-bar">
+                    <div class="health-label">Health</div>
+                    <div class="health-value"></div>
+                </div>
+                <div class="energy-bar">
+                    <div class="energy-label">Energy</div>
+                    <div class="energy-value"></div>
+                </div>
+            </div>
+            
+            <div id="mini-map" class="ui-panel">
+                <!-- Mini-map will be rendered here -->
+            </div>
+            
+            <div id="action-bar" class="ui-panel">
+                <!-- Quick actions and hotkeys -->
+            </div>
+            
+            <div id="time-display" class="ui-panel">
+                <div class="day-cycle"></div>
+                <div class="time-text"></div>
+                <div class="season-indicator"></div>
+            </div>
+            
+            <div id="notification-area">
+                <!-- Notifications and alerts will appear here -->
+            </div>
+        </div>
+        
+        <!-- Modal interfaces -->
+        <div id="inventory-modal" class="game-modal hidden">
+            <div class="modal-header">
+                <h3>Inventory</h3>
+                <button class="close-modal-btn">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="inventory-container">
+                    <div class="equipment-slots">
+                        <!-- Equipment slots will be generated dynamically -->
+                    </div>
+                    <div class="inventory-grid">
+                        <!-- Inventory grid will be generated dynamically -->
+                    </div>
+                </div>
+                <div class="character-stats">
+                    <!-- Character stats will be displayed here -->
+                </div>
+            </div>
+        </div>
+        
+        <div id="dialogue-modal" class="game-modal hidden">
+            <div class="modal-content">
+                <div class="npc-portrait"></div>
+                <div class="dialogue-content">
+                    <div class="npc-name"></div>
+                    <div class="dialogue-text"></div>
+                    <div class="dialogue-options">
+                        <!-- Dialogue options will be generated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="quest-modal" class="game-modal hidden">
+            <div class="modal-header">
+                <h3>Quests</h3>
+                <button class="close-modal-btn">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="quest-list">
+                    <!-- Active quests will be listed here -->
+                </div>
+                <div class="quest-details">
+                    <!-- Details of selected quest will be shown here -->
+                </div>
+            </div>
+        </div>
+        
+        <div id="trading-modal" class="game-modal hidden">
+            <div class="modal-header">
+                <h3>Trading</h3>
+                <button class="close-modal-btn">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="trading-container">
+                    <div class="player-inventory trading-section">
+                        <h4>Your Items</h4>
+                        <div class="inventory-grid">
+                            <!-- Player items will be displayed here -->
+                        </div>
+                    </div>
+                    <div class="trading-controls">
+                        <div class="trade-values">
+                            <div class="player-value">0</div>
+                            <div class="merchant-value">0</div>
+                        </div>
+                        <button class="trade-btn">Trade</button>
+                    </div>
+                    <div class="merchant-inventory trading-section">
+                        <h4>Merchant Items</h4>
+                        <div class="inventory-grid">
+                            <!-- Merchant items will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dev tools interface -->
+        <div id="dev-tools" class="hidden">
+            <div class="dev-tools-header">
+                <h3>Developer Tools</h3>
+                <button id="toggle-dev-tools-btn">Hide</button>
+            </div>
+            <div class="dev-tools-tabs">
+                <button class="dev-tab-btn active" data-tab="entity-inspector">Entities</button>
+                <button class="dev-tab-btn" data-tab="world-editor">World</button>
+                <button class="dev-tab-btn" data-tab="story-debug">Story</button>
+                <button class="dev-tab-btn" data-tab="system-debug">Systems</button>
+            </div>
+            <div class="dev-tools-content">
+                <div id="entity-inspector" class="dev-tab-content active">
+                    <div class="entity-list">
+                        <!-- List of entities in the game world -->
+                    </div>
+                    <div class="entity-details">
+                        <!-- Selected entity details -->
+                    </div>
+                </div>
+                <div id="world-editor" class="dev-tab-content">
+                    <!-- World editing tools -->
+                </div>
+                <div id="story-debug" class="dev-tab-content">
+                    <!-- Story and quest debugging -->
+                </div>
+                <div id="system-debug" class="dev-tab-content">
+                    <!-- System monitoring and controls -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Engine and Core Scripts -->
+    <script type="module" src="js/main.js"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
