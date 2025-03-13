@@ -2,12 +2,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Requiemporium</title>
+    <title>Isometric Sandbox</title>
     <link rel="stylesheet" href="styles/main.css">
     <script type="importmap">
     {
         "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.module.js"
+            "three": "https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.module.js",
+            "seedrandom": "https://cdn.jsdelivr.net/npm/seedrandom@3.0.5/seedrandom.min.js"
         }
     }
     </script>
@@ -17,7 +18,7 @@
         <div class="logo-container">
             <svg id="game-logo" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
                 <polygon points="50,20 150,20 180,50 150,80 50,80 20,50" fill="none" stroke="#f0f0f0" stroke-width="2"/>
-                <text x="55" y="55" font-family="Arial" font-size="14" fill="#f0f0f0">REQUIEMPORIUM</text>
+                <text x="55" y="55" font-family="Arial" font-size="14" fill="#f0f0f0">ISOMETRIC WORLD</text>
             </svg>
         </div>
         <div class="loading-bar">
@@ -27,7 +28,7 @@
 
     <div id="splash-screen" class="hidden">
         <div class="splash-container">
-            <h1>Requiemporium</h1>
+            <h1>Isometric World</h1>
             <div class="menu-buttons">
                 <button id="new-game-btn" class="menu-btn">New Game</button>
                 <button id="load-game-btn" class="menu-btn">Load Game</button>
@@ -56,33 +57,13 @@
                     <div class="option-group">
                         <label>Appearance:</label>
                         <div class="appearance-controls">
-                            <div>
-                                <span>Character Type:</span>
-                                <select id="character-type">
-                                    <option value="warrior">Warrior</option>
-                                </select>
-                            </div>
+                            <!-- Appearance controls will be generated dynamically -->
                         </div>
                     </div>
                     <div class="option-group">
                         <label>Starting Stats:</label>
                         <div class="stats-allocation">
-                            <div>
-                                <span>Strength:</span>
-                                <span>10</span>
-                            </div>
-                            <div>
-                                <span>Dexterity:</span>
-                                <span>8</span>
-                            </div>
-                            <div>
-                                <span>Intelligence:</span>
-                                <span>7</span>
-                            </div>
-                            <div>
-                                <span>Vitality:</span>
-                                <span>10</span>
-                            </div>
+                            <!-- Stat allocation controls will be generated dynamically -->
                         </div>
                     </div>
                 </div>
@@ -285,7 +266,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/seedrandom@3.0.5/seedrandom.min.js"></script>
+    <!-- Game Engine and Core Scripts -->
     <script type="module" src="js/main.js"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
