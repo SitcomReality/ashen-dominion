@@ -205,13 +205,21 @@ export class EntityManager {
      * @returns {object} - Player entity
      */
     createPlayer(name) {
+        if (!this.engine.inventorySystem) {
+            console.error("Inventory system not available");
+        }
+      
         const player = this.createEntityFromTemplate('player', {
-            name: name,
+            name: name || 'Player',
             'position.x': 0,
-            'position.y': 0
+            'position.y': 0,
+            'stats.health': 100,
+            'stats.maxHealth': 100,
+            'stats.energy': 80,
+            'stats.maxEnergy': 100
         });
         
-        // Initialize inventory and equipment using inventory system
+        // Initialize inventory with fallback for safety
         if (this.engine.inventorySystem) {
             player.inventory = this.engine.inventorySystem.createInventory(30);
             player.equipment = this.engine.inventorySystem.createEquipment();
