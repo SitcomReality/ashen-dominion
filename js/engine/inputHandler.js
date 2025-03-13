@@ -73,13 +73,15 @@ export class InputHandler {
      * @param {KeyboardEvent} event - Keyboard event
      */
     handleKeyDown(event) {
+        if (!event || !event.key) return;
+        
         // Store key state
         this.keys[event.key.toLowerCase()] = true;
         
         // Check for special key combinations
         if (event.key === 'F12') {
             // Toggle dev tools
-            if (this.engine.game.uiManager) {
+            if (this.engine.game && this.engine.game.uiManager) {
                 this.engine.game.uiManager.toggleDevTools();
             }
         }
@@ -91,9 +93,9 @@ export class InputHandler {
      */
     handleKeyUp(event) {
         // Clear key state
-        if (event && event.key) {
-            this.keys[event.key.toLowerCase()] = false;
-        }
+        if (!event || !event.key) return;
+        
+        this.keys[event.key.toLowerCase()] = false;
     }
     
     /**
