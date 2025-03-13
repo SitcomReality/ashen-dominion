@@ -91,7 +91,9 @@ export class InputHandler {
      */
     handleKeyUp(event) {
         // Clear key state
-        this.keys[event.key.toLowerCase()] = false;
+        if (event && event.key) {
+            this.keys[event.key.toLowerCase()] = false;
+        }
     }
     
     /**
