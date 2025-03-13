@@ -1,5 +1,3 @@
-import seedrandom from 'seedrandom';
-
 /**
  * Generates the game world
  */
@@ -94,7 +92,7 @@ export class WorldGenerator {
         console.log(`Generating world with seed: ${seed}`);
         
         // Initialize random generator with seed
-        this.random = new seedrandom(seed);
+        this.random = new window.seedrandom(seed);
         
         // Create world object
         const world = {
