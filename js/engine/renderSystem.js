@@ -1274,9 +1274,9 @@ export class RenderSystem {
      */
     lightenColor(hex, percent) {
         // Convert hex to RGB
-        let r = parseInt(hex.substr(1, 2), 16);
-        let g = parseInt(hex.substr(3, 2), 16);
-        let b = parseInt(hex.substr(5, 2), 16);
+        let r = parseInt(hex.slice(1, 3), 16);
+        let g = parseInt(hex.slice(3, 5), 16);
+        let b = parseInt(hex.slice(5, 7), 16);
         
         // Lighten
         r = Math.min(255, Math.floor(r * (1 + percent / 100)));
@@ -1294,9 +1294,9 @@ export class RenderSystem {
      * @returns {string} - Adjusted hex colour
      */
     adjustBrightness(hex, amount) {
-        let r = parseInt(hex.substr(1, 2), 16);
-        let g = parseInt(hex.substr(3, 2), 16);
-        let b = parseInt(hex.substr(5, 2), 16);
+        let r = parseInt(hex.slice(1, 3), 16);
+        let g = parseInt(hex.slice(3, 5), 16);
+        let b = parseInt(hex.slice(5, 7), 16);
 
         r = Math.max(0, Math.min(255, r + amount));
         g = Math.max(0, Math.min(255, g + amount));
