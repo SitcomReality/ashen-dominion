@@ -360,7 +360,7 @@ export class WorldGenerator {
                     width: right - left,
                     height: bottom - top,
                     biome: biome.name,
-                    height: height,
+                    terrainHeight: height,
                     moisture: moisture,
                     resources: this.generateRegionResources(biome),
                     entities: []

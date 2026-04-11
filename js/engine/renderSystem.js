@@ -106,6 +106,20 @@ export class RenderSystem {
     }
     
     /**
+     * Reset camera to default position and zoom
+     */
+    resetCamera() {
+        this.camera.x = 0;
+        this.camera.y = 0;
+        this.camera.zoom = 1;
+        this.camera.targetZoom = 1;
+        this.camera.shakeOffsetX = 0;
+        this.camera.shakeOffsetY = 0;
+        this.camera.shake.active = false;
+        this.camera.shake.intensity = 0;
+    }
+
+    /**
      * Load rendering assets
      */
     loadAssets() {
@@ -335,57 +349,72 @@ export class RenderSystem {
     }
     
     /**
-     * Render the background (sky, distant features)
+     * Render the background (indoor mall ceiling and atmosphere)
      */
     renderBackground(ctx) {
-        // Get time of day for sky color
+        // Get time of day for lighting state
         const timeData = this.engine.timeManager?.getCurrentTime();
         const isDaytime = timeData?.isDaytime ?? true;
-        
-        // Get weather for sky effects
+
+        // Get weather for ambient effects
         const currentWeather = this.engine.weatherSystem?.getCurrentWeather() ?? 'clear';
-        
-        // Render sky gradient
-        const skyGradient = ctx.createLinearGradient(0, 0, 0, this.canvas.height * 0.5);
-        
+
+        // Render indoor ceiling gradient — the Requiemporium is an enclosed mega-mall
+        const ceilGradient = ctx.createLinearGradient(0, 0, 0, this.canvas.height * 0.5);
+
         if (isDaytime) {
+            // Operating hours — fluorescent / atrium lighting
             switch (currentWeather) {
                 case 'clear':
-                    skyGradient.addColorStop(0, '#87CEEB'); // Sky blue
-                    skyGradient.addColorStop(1, '#E0F7FF'); // Lighter blue
+                    ceilGradient.addColorStop(0, '#D8D4CC'); // warm off-white ceiling
+                    ceilGradient.addColorStop(1, '#E8E4DC'); // lighter haze toward horizon
                     break;
                 case 'cloudy':
-                    skyGradient.addColorStop(0, '#A5C9E0'); // Cloudy blue
-                    skyGradient.addColorStop(1, '#D6E9F5'); // Light gray-blue
+                    ceilGradient.addColorStop(0, '#C8C4BC');
+                    ceilGradient.addColorStop(1, '#D8D4CC');
                     break;
                 case 'rain':
-                    skyGradient.addColorStop(0, '#708090'); // Slate gray
-                    skyGradient.addColorStop(1, '#A9B9C7'); // Lighter gray
+                    // Water dripping through damaged ceiling
+                    ceilGradient.addColorStop(0, '#B0ACA4');
+                    ceilGradient.addColorStop(1, '#C8C4BC');
                     break;
                 case 'storm':
-                    skyGradient.addColorStop(0, '#4A4A4A'); // Dark gray
-                    skyGradient.addColorStop(1, '#7B7B7B'); // Medium gray
+                    // Power surge — darker emergency lighting
+                    ceilGradient.addColorStop(0, '#706860');
+                    ceilGradient.addColorStop(1, '#908880');
                     break;
                 case 'snow':
-                    skyGradient.addColorStop(0, '#E6E6FA'); // Lavender
-                    skyGradient.addColorStop(1, '#FFFFFF'); // White
+                    // Warm incandescent backup lights
+                    ceilGradient.addColorStop(0, '#F0ECE4');
+                    ceilGradient.addColorStop(1, '#FAF6EE');
                     break;
                 default:
-                    skyGradient.addColorStop(0, '#87CEEB');
-                    skyGradient.addColorStop(1, '#E0F7FF');
+                    ceilGradient.addColorStop(0, '#D8D4CC');
+                    ceilGradient.addColorStop(1, '#E8E4DC');
             }
         } else {
-            // Night sky
-            skyGradient.addColorStop(0, '#0C1445'); // Dark blue
-            skyGradient.addColorStop(1, '#243165'); // Medium blue
+            // After-hours — emergency lighting only
+            ceilGradient.addColorStop(0, '#1A1828');
+            ceilGradient.addColorStop(1, '#2A2438');
         }
-        
-        ctx.fillStyle = skyGradient;
+
+        ctx.fillStyle = ceilGradient;
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height * 0.5);
         this.metrics.drawCalls++;
-        
-        // Render distant features (mountains, etc.)
-        // This would depend on the world generator
+
+        // Subtle ceiling light strip along the horizon line
+        const horizonY = this.canvas.height * 0.5;
+        const lightStrip = ctx.createLinearGradient(0, horizonY - 20, 0, horizonY + 8);
+        if (isDaytime) {
+            lightStrip.addColorStop(0, 'rgba(255,248,220,0.18)');
+            lightStrip.addColorStop(1, 'rgba(255,248,220,0)');
+        } else {
+            lightStrip.addColorStop(0, 'rgba(80,160,120,0.12)');
+            lightStrip.addColorStop(1, 'rgba(80,160,120,0)');
+        }
+        ctx.fillStyle = lightStrip;
+        ctx.fillRect(0, horizonY - 20, this.canvas.width, 28);
+        this.metrics.drawCalls++;
     }
     
     /**
@@ -417,6 +446,43 @@ export class RenderSystem {
     }
     
     /**
+     * Get the tile type for a given world position based on the biome of the region it belongs to.
+     * Returns null when the position is outside the generated world bounds.
+     * @param {number} x - World X coordinate (integer tile coordinate)
+     * @param {number} y - World Y coordinate (integer tile coordinate)
+     * @returns {string|null} Tile type string or null if out of bounds
+     */
+    getTileType(x, y) {
+        const worldManager = this.engine.worldManager;
+        if (!worldManager || !worldManager.worldData) return null;
+
+        const { width: worldWidth, height: worldHeight, regions } = worldManager.worldData;
+        const regionSize = regions[0]?.width || 100;
+
+        // Outside generated world bounds — nothing to render
+        if (x < 0 || x >= worldWidth || y < 0 || y >= worldHeight) return null;
+
+        // O(1) region lookup using the regular grid layout
+        const rx = Math.floor(x / regionSize);
+        const ry = Math.floor(y / regionSize);
+        const regionId = `r${rx}_${ry}`;
+        const region = regions.find(r => r.id === regionId);
+        if (!region) return null;
+
+        // Map biome name → tile material type
+        switch (region.biome) {
+            case 'MallPlaza':          return 'tile';
+            case 'ElectronicsDept':    return 'tech_floor';
+            case 'Storage':            return 'concrete';
+            case 'FoodCourt':          return 'carpet';
+            case 'Restricted':         return 'marble';
+            case 'LuxuryDept':         return 'marble';
+            case 'MaintenanceTunnels': return 'grate';
+            default:                   return 'tile';
+        }
+    }
+
+    /**
      * Render a single terrain tile
      * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
      * @param {number} x - Tile X coordinate
@@ -425,44 +491,31 @@ export class RenderSystem {
     renderTerrainTile(ctx, x, y) {
         // Get tile type based on world position
         const tileType = this.getTileType(x, y);
-        
+
+        // Don't render tiles that are outside the generated world
+        if (tileType === null) return;
+
         // Get screen position for tile
         const screenPos = this.worldToScreenPosition(x, y);
-        
+
         // Render tile
         const tileWidth = this.isometric.tileWidth * this.camera.zoom;
         const tileHeight = this.isometric.tileHeight * this.camera.zoom;
-        
-        // Set tile color based on type
-        let fillColor = '#7CBA35'; // Default green color
-        
+
+        // Map tile type to fill colour
+        let fillColor;
         switch (tileType) {
-            case 'marble':
-                fillColor = '#E0E0E0';
-                break;
-            case 'tech_floor':
-                fillColor = '#A5C8E1';
-                break;
-            case 'concrete':
-                fillColor = '#A0A0A0';
-                break;
-            case 'tile':
-                fillColor = '#D9BC9A';
-                break;
-            case 'metal':
-                fillColor = '#8A9DB5';
-                break;
-            case 'carpet':
-                fillColor = '#9370DB';
-                break;
-            case 'grate':
-                fillColor = '#505050';
-                break;
-            default:
-                fillColor = '#D0D0D0';
+            case 'marble':     fillColor = '#EDEAE4'; break; // warm white marble
+            case 'tech_floor': fillColor = '#2870A8'; break; // rich tech-blue
+            case 'concrete':   fillColor = '#8A8A80'; break; // cool concrete
+            case 'tile':       fillColor = '#D8C8A0'; break; // warm mall tile
+            case 'metal':      fillColor = '#6888A0'; break; // brushed steel
+            case 'carpet':     fillColor = '#5844A0'; break; // deep purple carpet
+            case 'grate':      fillColor = '#383830'; break; // dark metal grate
+            default:           fillColor = '#B8B0A8';        // neutral floor stone
         }
-        
-        // Draw isometric tile
+
+        // Draw isometric tile diamond
         ctx.beginPath();
         ctx.moveTo(screenPos.x, screenPos.y - tileHeight / 2);
         ctx.lineTo(screenPos.x + tileWidth / 2, screenPos.y);
@@ -471,87 +524,121 @@ export class RenderSystem {
         ctx.closePath();
         ctx.fillStyle = fillColor;
         ctx.fill();
-        
-        // Draw tile pattern
-        if (tileType) {
-            ctx.save();
-            
-            // Clip to tile shape
-            ctx.beginPath();
-            ctx.moveTo(screenPos.x, screenPos.y - tileHeight / 2);
-            ctx.lineTo(screenPos.x + tileWidth / 2, screenPos.y);
-            ctx.lineTo(screenPos.x, screenPos.y + tileHeight / 2);
-            ctx.lineTo(screenPos.x - tileWidth / 2, screenPos.y);
-            ctx.closePath();
-            ctx.clip();
-            
-            // Draw pattern based on type
-            ctx.strokeStyle = this.adjustBrightness(fillColor, -20);
-            ctx.lineWidth = 1;
-            
-            switch (tileType) {
-                case 'marble':
-                    // Draw checkerboard pattern
-                    if ((x + y) % 2 === 0) {
-                        ctx.fillStyle = this.adjustBrightness(fillColor, 10);
-                        ctx.fillRect(
-                            screenPos.x - tileWidth/2,
-                            screenPos.y - tileHeight/2,
-                            tileWidth,
-                            tileHeight
-                        );
-                    }
-                    break;
-                case 'tech_floor':
-                    // Draw grid lines
-                    ctx.beginPath();
-                    ctx.moveTo(screenPos.x - tileWidth/2, screenPos.y);
-                    ctx.lineTo(screenPos.x + tileWidth/2, screenPos.y);
-                    ctx.moveTo(screenPos.x, screenPos.y - tileHeight/2);
-                    ctx.lineTo(screenPos.x, screenPos.y + tileHeight/2);
-                    ctx.stroke();
-                    break;
-                case 'concrete':
-                    // Draw grid lines
-                    ctx.beginPath();
-                    const lineSpacing = tileHeight / 4;
+
+        // Draw surface pattern clipped to tile shape
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x, screenPos.y - tileHeight / 2);
+        ctx.lineTo(screenPos.x + tileWidth / 2, screenPos.y);
+        ctx.lineTo(screenPos.x, screenPos.y + tileHeight / 2);
+        ctx.lineTo(screenPos.x - tileWidth / 2, screenPos.y);
+        ctx.closePath();
+        ctx.clip();
+
+        ctx.strokeStyle = this.adjustBrightness(fillColor, -22);
+        ctx.lineWidth = 1;
+
+        switch (tileType) {
+            case 'marble':
+                // Alternating lighter / base tile for checkerboard
+                if ((x + y) % 2 === 0) {
+                    ctx.fillStyle = this.adjustBrightness(fillColor, 12);
+                    ctx.fillRect(
+                        screenPos.x - tileWidth / 2,
+                        screenPos.y - tileHeight / 2,
+                        tileWidth,
+                        tileHeight
+                    );
+                }
+                break;
+            case 'tech_floor':
+                // Cross-hair grid lines
+                ctx.beginPath();
+                ctx.moveTo(screenPos.x - tileWidth / 2, screenPos.y);
+                ctx.lineTo(screenPos.x + tileWidth / 2, screenPos.y);
+                ctx.moveTo(screenPos.x, screenPos.y - tileHeight / 2);
+                ctx.lineTo(screenPos.x, screenPos.y + tileHeight / 2);
+                ctx.stroke();
+                // Bright corner accent dot
+                ctx.fillStyle = this.adjustBrightness(fillColor, 50);
+                ctx.beginPath();
+                ctx.arc(screenPos.x, screenPos.y, tileHeight * 0.12, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+            case 'concrete':
+                // Horizontal score lines
+                ctx.beginPath();
+                {
+                    const ls = tileHeight / 4;
                     for (let i = -2; i <= 2; i++) {
-                        ctx.moveTo(screenPos.x - tileWidth/2, screenPos.y + i * lineSpacing);
-                        ctx.lineTo(screenPos.x + tileWidth/2, screenPos.y + i * lineSpacing);
+                        ctx.moveTo(screenPos.x - tileWidth / 2, screenPos.y + i * ls);
+                        ctx.lineTo(screenPos.x + tileWidth / 2, screenPos.y + i * ls);
                     }
-                    ctx.stroke();
-                    break;
-                case 'tile':
-                    // Draw dot pattern
-                    const dotSize = 1.5;
+                }
+                ctx.stroke();
+                break;
+            case 'tile':
+                // Small corner dots
+                {
+                    const dotR = Math.max(1, 1.5 * this.camera.zoom);
+                    ctx.fillStyle = this.adjustBrightness(fillColor, -18);
                     for (let dotX = -1; dotX <= 1; dotX++) {
                         for (let dotY = -1; dotY <= 1; dotY++) {
                             ctx.beginPath();
                             ctx.arc(
-                                screenPos.x + dotX * (tileWidth/4),
-                                screenPos.y + dotY * (tileHeight/4),
-                                dotSize,
-                                0,
-                                Math.PI * 2
+                                screenPos.x + dotX * (tileWidth / 4),
+                                screenPos.y + dotY * (tileHeight / 4),
+                                dotR, 0, Math.PI * 2
                             );
-                            ctx.fillStyle = this.adjustBrightness(fillColor, -15);
                             ctx.fill();
                         }
                     }
-                    break;
-                case 'metal':
-                    // Draw cross pattern
-                    ctx.beginPath();
-                    ctx.moveTo(screenPos.x - tileWidth/2, screenPos.y - tileHeight/2);
-                    ctx.lineTo(screenPos.x + tileWidth/2, screenPos.y + tileHeight/2);
-                    ctx.moveTo(screenPos.x + tileWidth/2, screenPos.y - tileHeight/2);
-                    ctx.lineTo(screenPos.x - tileWidth/2, screenPos.y + tileHeight/2);
-                    ctx.stroke();
-                    break;
-            }
-            
-            ctx.restore();
+                }
+                break;
+            case 'metal':
+                // Diagonal scratch lines
+                ctx.beginPath();
+                ctx.moveTo(screenPos.x - tileWidth / 2, screenPos.y - tileHeight / 2);
+                ctx.lineTo(screenPos.x + tileWidth / 2, screenPos.y + tileHeight / 2);
+                ctx.moveTo(screenPos.x + tileWidth / 2, screenPos.y - tileHeight / 2);
+                ctx.lineTo(screenPos.x - tileWidth / 2, screenPos.y + tileHeight / 2);
+                ctx.stroke();
+                break;
+            case 'carpet':
+                // Small woven-dot pattern
+                {
+                    const dotR = Math.max(0.8, 1.2 * this.camera.zoom);
+                    ctx.fillStyle = this.adjustBrightness(fillColor, 24);
+                    const offsets = [-tileWidth / 3, 0, tileWidth / 3];
+                    const offY = [-tileHeight / 3, 0, tileHeight / 3];
+                    for (const ox of offsets) {
+                        for (const oy of offY) {
+                            ctx.beginPath();
+                            ctx.arc(screenPos.x + ox, screenPos.y + oy, dotR, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                }
+                break;
+            case 'grate':
+                // Diamond grid lines
+                ctx.strokeStyle = this.adjustBrightness(fillColor, 30);
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(screenPos.x - tileWidth / 2, screenPos.y);
+                ctx.lineTo(screenPos.x, screenPos.y - tileHeight / 2);
+                ctx.lineTo(screenPos.x + tileWidth / 2, screenPos.y);
+                ctx.lineTo(screenPos.x, screenPos.y + tileHeight / 2);
+                ctx.closePath();
+                ctx.moveTo(screenPos.x - tileWidth / 4, screenPos.y - tileHeight / 4);
+                ctx.lineTo(screenPos.x + tileWidth / 4, screenPos.y - tileHeight / 4);
+                ctx.moveTo(screenPos.x - tileWidth / 4, screenPos.y + tileHeight / 4);
+                ctx.lineTo(screenPos.x + tileWidth / 4, screenPos.y + tileHeight / 4);
+                ctx.stroke();
+                break;
         }
+
+        ctx.restore();
         
         // Add tile border for definition
         ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
@@ -642,36 +729,44 @@ export class RenderSystem {
      * @param {object} screenPos - Screen position
      */
     renderPlayerEntity(ctx, entity, screenPos) {
-        // In a real implementation, this would render the player sprite
-        // For now, just draw a colorful circle
-        
         const size = 20 * this.camera.zoom;
-        
-        // Draw shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        const lw = Math.max(1, this.camera.zoom);
+
+        // Ground shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.32)';
         ctx.beginPath();
-        ctx.ellipse(
-            screenPos.x, 
-            screenPos.y + size * 0.1, 
-            size * 0.6, 
-            size * 0.3, 
-            0, 0, Math.PI * 2
-        );
+        ctx.ellipse(screenPos.x, screenPos.y + size * 0.15, size * 0.55, size * 0.25, 0, 0, Math.PI * 2);
         ctx.fill();
-        
-        // Draw player
-        ctx.fillStyle = '#E74C3C'; // Red
+
+        // Body (blue jacket — a shopper/adventurer in the mall)
+        ctx.fillStyle = '#2060C8';
         ctx.beginPath();
-        ctx.arc(screenPos.x, screenPos.y - size * 0.5, size, 0, Math.PI * 2);
+        ctx.ellipse(screenPos.x, screenPos.y - size * 0.42, size * 0.52, size * 0.72, 0, 0, Math.PI * 2);
         ctx.fill();
-        
-        ctx.strokeStyle = '#C0392B';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#1448A8';
+        ctx.lineWidth = 1.5 * lw;
         ctx.stroke();
-        
-        this.metrics.drawCalls += 2;
+
+        // Head
+        const headY = screenPos.y - size * 1.28;
+        const headR = size * 0.38;
+        ctx.fillStyle = '#F4C07A';
+        ctx.beginPath();
+        ctx.arc(screenPos.x, headY, headR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#D49858';
+        ctx.lineWidth = 1 * lw;
+        ctx.stroke();
+
+        // Gold marker dot above head to distinguish the player
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.arc(screenPos.x, headY - headR - size * 0.18, size * 0.11, 0, Math.PI * 2);
+        ctx.fill();
+
+        this.metrics.drawCalls += 4;
     }
-    
+
     /**
      * Render NPC entity
      * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
@@ -679,59 +774,51 @@ export class RenderSystem {
      * @param {object} screenPos - Screen position
      */
     renderNPCEntity(ctx, entity, screenPos) {
-        // In a real implementation, this would render the NPC sprite
-        // For now, just draw a colorful circle with different colors for NPC types
-        
         const size = 16 * this.camera.zoom;
-        
-        // Draw shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        const lw = Math.max(1, this.camera.zoom);
+
+        // Ground shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
         ctx.beginPath();
-        ctx.ellipse(
-            screenPos.x, 
-            screenPos.y + size * 0.1, 
-            size * 0.6, 
-            size * 0.3, 
-            0, 0, Math.PI * 2
-        );
+        ctx.ellipse(screenPos.x, screenPos.y + size * 0.15, size * 0.5, size * 0.22, 0, 0, Math.PI * 2);
         ctx.fill();
-        
-        // Set color based on NPC type
-        let fillColor = '#3498DB'; // Default blue
-        let strokeColor = '#2980B9';
-        
+
+        // Body colour keyed to NPC role
+        let bodyColor = '#4A8CD8';
+        let strokeColor = '#2A6CB8';
+
         if (entity.brain && entity.brain.type) {
             switch (entity.brain.type) {
                 case 'villager':
-                    fillColor = '#3498DB'; // Blue
-                    strokeColor = '#2980B9';
-                    break;
+                    bodyColor = '#5B9BD5'; strokeColor = '#3A7BB4'; break;
                 case 'merchant':
-                    fillColor = '#9B59B6'; // Purple
-                    strokeColor = '#8E44AD';
-                    break;
+                    bodyColor = '#9B59B6'; strokeColor = '#7D3A9A'; break;
                 case 'guard':
-                    fillColor = '#7F8C8D'; // Gray
-                    strokeColor = '#6C7A89';
-                    break;
+                    bodyColor = '#485060'; strokeColor = '#2C3240'; break;
                 case 'enemy':
-                    fillColor = '#E74C3C'; // Red
-                    strokeColor = '#C0392B';
-                    break;
+                    bodyColor = '#C0392B'; strokeColor = '#922B21'; break;
             }
         }
-        
-        // Draw NPC
-        ctx.fillStyle = fillColor;
+
+        // Body
+        ctx.fillStyle = bodyColor;
         ctx.beginPath();
-        ctx.arc(screenPos.x, screenPos.y - size * 0.5, size, 0, Math.PI * 2);
+        ctx.ellipse(screenPos.x, screenPos.y - size * 0.38, size * 0.44, size * 0.62, 0, 0, Math.PI * 2);
         ctx.fill();
-        
         ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5 * lw;
         ctx.stroke();
-        
-        this.metrics.drawCalls += 2;
+
+        // Head
+        ctx.fillStyle = '#F0C07A';
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y - size * 1.12, size * 0.32, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#D09858';
+        ctx.lineWidth = 1 * lw;
+        ctx.stroke();
+
+        this.metrics.drawCalls += 4;
     }
     
     /**
@@ -889,7 +976,101 @@ export class RenderSystem {
         // Render any active particles or effects
         this.renderParticles(ctx);
     }
-    
+
+    /**
+     * Render resource entity (ore nodes, loot crates, etc.)
+     * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+     * @param {object} entity - Entity to render
+     * @param {object} screenPos - Screen position
+     */
+    renderResourceEntity(ctx, entity, screenPos) {
+        const size = 11 * this.camera.zoom;
+        const lw = Math.max(1, this.camera.zoom);
+
+        // Shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y + size * 0.15, size * 0.55, size * 0.24, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Colour by resource type
+        let fillColor = '#2ECC71'; // Default green
+        const rType = entity.resourceType || entity.resource?.type || '';
+        switch (rType) {
+            case 'electronics': case 'rare_parts': case 'gadgets':
+                fillColor = '#3498DB'; break;
+            case 'food': case 'food_samples':
+                fillColor = '#F1C40F'; break;
+            case 'metal_parts': case 'pipes': case 'tools':
+                fillColor = '#95A5A6'; break;
+            case 'jewelry': case 'designer_clothes':
+                fillColor = '#E67E22'; break;
+        }
+
+        // Diamond shape
+        ctx.fillStyle = fillColor;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x,           screenPos.y - size);
+        ctx.lineTo(screenPos.x + size * 0.7, screenPos.y);
+        ctx.lineTo(screenPos.x,           screenPos.y + size * 0.5);
+        ctx.lineTo(screenPos.x - size * 0.7, screenPos.y);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = this.adjustBrightness(fillColor, -30);
+        ctx.lineWidth = 1.5 * lw;
+        ctx.stroke();
+
+        this.metrics.drawCalls += 3;
+    }
+
+    /**
+     * Render a generic entity as a plain circle indicator
+     * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+     * @param {object} entity - Entity to render
+     * @param {object} screenPos - Screen position
+     */
+    renderDefaultEntity(ctx, entity, screenPos) {
+        const size = 10 * this.camera.zoom;
+
+        ctx.fillStyle = '#BDC3C7';
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y, size, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#95A5A6';
+        ctx.lineWidth = Math.max(1, this.camera.zoom);
+        ctx.stroke();
+
+        this.metrics.drawCalls++;
+    }
+
+    /**
+     * Render an entity's name as a floating label (debug / interaction hint)
+     * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+     * @param {object} entity - Entity whose name to display
+     * @param {object} screenPos - Screen position of the entity
+     */
+    renderEntityName(ctx, entity, screenPos) {
+        const fontSize = Math.max(10, Math.round(12 * this.camera.zoom));
+        const labelY = screenPos.y - 28 * this.camera.zoom;
+
+        ctx.save();
+        ctx.font = `${fontSize}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // Soft drop-shadow for readability
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillText(entity.name, screenPos.x + 1, labelY + 1);
+
+        ctx.fillStyle = 'rgba(240, 240, 255, 0.95)';
+        ctx.fillText(entity.name, screenPos.x, labelY);
+
+        ctx.restore();
+        this.metrics.drawCalls++;
+    }
+
     /**
      * Render rain effect
      * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
@@ -1093,9 +1274,9 @@ export class RenderSystem {
      */
     lightenColor(hex, percent) {
         // Convert hex to RGB
-        let r = parseInt(hex.substr(1, 2), 16);
-        let g = parseInt(hex.substr(3, 2), 16);
-        let b = parseInt(hex.substr(5, 2), 16);
+        let r = parseInt(hex.slice(1, 3), 16);
+        let g = parseInt(hex.slice(3, 5), 16);
+        let b = parseInt(hex.slice(5, 7), 16);
         
         // Lighten
         r = Math.min(255, Math.floor(r * (1 + percent / 100)));
@@ -1103,6 +1284,24 @@ export class RenderSystem {
         b = Math.min(255, Math.floor(b * (1 + percent / 100)));
         
         // Convert back to hex
+        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    }
+
+    /**
+     * Adjust a hex colour's brightness by a fixed amount
+     * @param {string} hex - Hex colour string (e.g. '#RRGGBB')
+     * @param {number} amount - Positive to lighten, negative to darken (-255 to 255)
+     * @returns {string} - Adjusted hex colour
+     */
+    adjustBrightness(hex, amount) {
+        let r = parseInt(hex.slice(1, 3), 16);
+        let g = parseInt(hex.slice(3, 5), 16);
+        let b = parseInt(hex.slice(5, 7), 16);
+
+        r = Math.max(0, Math.min(255, r + amount));
+        g = Math.max(0, Math.min(255, g + amount));
+        b = Math.max(0, Math.min(255, b + amount));
+
         return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
     }
 }
