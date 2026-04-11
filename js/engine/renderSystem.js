@@ -1106,9 +1106,7 @@ export class RenderSystem {
         return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
     }
 // ... existing code ...
-```
 
-```js
 /**
  * Handles player input and controls
  */
@@ -1546,9 +1544,7 @@ export class InputHandler {
         return { ...this.movementVector };
     }
 }
-```
 
-```js
 /**
  * Manages the game world and its regions, including terrain, resources, and structures
  */
@@ -1978,9 +1974,7 @@ export class WorldManager {
         return true;
     }
 }
-```
 
-```js
 /**
  * Handles player inventory and equipment
  */
@@ -2562,9 +2556,7 @@ export class InventorySystem {
         return true;
     }
 }
-```
 
-```js
 /**
  * Handles game time and day/night cycle
  */
@@ -2939,9 +2931,7 @@ export class TimeManager {
         this.engine.storyManager.setFlag(flag, value);
     }
 }
-```
 
-```js
 /**
  * Handles game audio including music, sound effects, and ambient sounds
  */
@@ -3458,9 +3448,7 @@ export class SoundManager {
         };
     }
 }
-```
 
-``` js
 /**
  * Manages player character data including stats, skills, and equipment
  */
@@ -3607,9 +3595,7 @@ export class CharacterManager {
         this.equipment[itemId] = null;
     }
 }
-```
 
-```js
 /**
  * Handles player interaction with NPCs
  */
@@ -3667,9 +3653,7 @@ export class NPCInteractionManager {
         console.log(`Handling interaction with NPC ${npcId}: ${interactionType}`);
     }
 }
-```
 
-```js
 /**
  * Handles player trading with NPCs
  */
@@ -3730,9 +3714,7 @@ export class TradingManager {
         console.log(`Handling trade with NPC ${npcId}: ${JSON.stringify(tradeData)}`);
     }
 }
-```
 
-```js
 /**
  * Handles player quests and objectives
  */
@@ -3954,9 +3936,7 @@ export class QuestManager {
         return true;
     }
 }
-```
 
-``` js
 /**
  * Manages game engine systems and functionality
  */
@@ -4540,9 +4520,7 @@ export class GameEngine {
         this.engine.storyManager.setFlag(flag, value);
     }
 }
-```
 
-``` js
 // ... existing code ...
     /**
      * Render a single terrain tile
