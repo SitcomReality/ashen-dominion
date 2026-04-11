@@ -1,1 +1,0 @@
-/* This file handles rendering the game graphics and the UI and is temporarily trimmmed out to reduce context length. */
